@@ -16,3 +16,32 @@ jobs:
             echo "Compiling $f"
             g++ -std=c++17 -Wall -o /tmp/"$(basename "$f" .cpp)" "$f"
           done
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=warning,performance,portability \
+            --suppress=missingIncludeSystem \
+            --error-exitcode=1 \
+            練習*.cpp
+
+  readme-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify every exercise is listed in README
+        run: |
+          set -e
+          missing=0
+          for f in 練習*.cpp; do
+            if ! grep -qF "]($f)" README.md; then
+              echo "::error file=README.md::Missing entry for $f in README.md's 題目列表 table"
+              missing=1
+            fi
+          done
+          exit $missing
