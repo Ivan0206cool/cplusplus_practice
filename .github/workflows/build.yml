@@ -1,0 +1,18 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile all exercises
+        run: |
+          set -e
+          for f in 練習*.cpp; do
+            echo "Compiling $f"
+            g++ -std=c++17 -Wall -o /tmp/"$(basename "$f" .cpp)" "$f"
+          done
