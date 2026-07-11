@@ -13,10 +13,10 @@ jobs:
       - name: Compile all exercises
         run: |
           set -e
-          for f in 練習*.cpp; do
+          while IFS= read -r -d '' f; do
             echo "Compiling $f"
             g++ -std=c++17 -Wall -o /tmp/"$(basename "$f" .cpp)" "$f"
-          done
+          done < <(find . -name "練習*.cpp" -print0)
 
   cppcheck:
     runs-on: ubuntu-latest
@@ -26,10 +26,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cppcheck
       - name: Run cppcheck
         run: |
-          cppcheck --enable=warning,performance,portability \
+          find . -name "練習*.cpp" -print0 | xargs -0 cppcheck \
+            --enable=warning,performance,portability \
             --suppress=missingIncludeSystem \
-            --error-exitcode=1 \
-            練習*.cpp
+            --error-exitcode=1
 
   readme-check:
     runs-on: ubuntu-latest
@@ -39,10 +39,11 @@ jobs:
         run: |
           set -e
           missing=0
-          for f in 練習*.cpp; do
-            if ! grep -qF "]($f)" README.md; then
-              echo "::error file=README.md::Missing entry for $f in README.md's 題目列表 table"
+          while IFS= read -r -d '' f; do
+            rel="${f#./}"
+            if ! grep -qF "]($rel)" README.md; then
+              echo "::error file=README.md::Missing entry for $rel in README.md's 題目列表 table"
               missing=1
             fi
-          done
+          done < <(find . -name "練習*.cpp" -print0)
           exit $missing
